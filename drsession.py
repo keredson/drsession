@@ -23,8 +23,6 @@
 #
 
 
-import json
-import bottle
 import redis
 import Cookie
 
@@ -35,37 +33,58 @@ __version__ = '1.0.0'
 
 class SessionMiddleware(object):
   
-  def __init__(self, app, prefix='drsession:', cookie='drsession', env='drsession', redis_kwargs={}, pool_kwargs={}):
+  def __init__(self, app, 
+      prefix='drsession:', 
+      cookie='drsession', 
+      env='drsession', 
+      redis_server=None, 
+      redis_kwargs={}, 
+      connection_pool=None, 
+      connection_pool_kwargs={},
+      loads=None,
+      dumps=None):
     self.app = app
     self.prefix = prefix
     self.cookie = cookie
     self.env = env
-    if pool_kwargs is not None:
-      connection_pool = redis.ConnectionPool(**pool_kwargs)
-      redis_kwargs['connection_pool'] = connection_pool
-    self.r = redis.Redis(**redis_kwargs)
+    self.loads = loads
+    self.dumps = dumps
+    if connection_pool is None:
+      if connection_pool_kwargs is not None:
+        connection_pool = redis.ConnectionPool(**connection_pool_kwargs)
+        redis_kwargs['connection_pool'] = connection_pool
+    if redis_server:
+      self.redis_server = redis_server
+    else:
+      self.redis_server = redis.Redis(**redis_kwargs)
   
   def __call__(self, environ, start_response, exec_info=None):
     cookie = Cookie.SimpleCookie()
     cookie.load(environ['HTTP_COOKIE'])
     session_id = cookie[self.cookie].value
-    environ[self.env] = Session(self.r, '%s%s' % (self.prefix, session_id))
+    environ[self.env] = Session(self.redis_server, '%s%s' % (self.prefix, session_id), loads=self.loads, dumps=self.dumps)
     return self.app(environ, start_response, exec_info=exec_info)
     
 
 class Session(object):
 
-  def __init__(self, redis_server, base_key):
+  def __init__(self, redis_server, base_key, loads=None, dumps=None):
     self.server = redis_server
     self.base_key = base_key
+    if loads is None:
+      import json
+      self.loads = json.loads
+    if dumps is None:
+      import json
+      self.dumps = json.dumps
 
   def __setitem__(self, key, item):
-    return self.server.hset(self.base_key, key, json.dumps(item))
+    return self.server.hset(self.base_key, key, self.dumps(item))
 
   def __getitem__(self, key):
     v = self.server.hget(self.base_key, key)
     if v is None: raise KeyError(key)
-    return json.loads(v)
+    return self.loads(v)
 
   def __repr__(self):
     return '%s<key=%s>' % (self.__class__.__name__, repr(self.base_key))
@@ -92,7 +111,7 @@ class Session(object):
     v = self.server.hget(self.base_key, key)
     if v is None: return d
     try:
-      return json.loads(v)
+      return self.loads(v)
     except ValueError:
       return d
 
@@ -106,20 +125,20 @@ class Session(object):
     if args and len(args)>0:
       E = args[0]
       if hasattr(E,'keys'):
-        for k in E: D[k] = json.dumps(E[k])
+        for k in E: D[k] = self.dumps(E[k])
       else:
-        for (k, v) in E: D[k] = json.dumps(v)
-    for k in F: D[k] = json.dumps(F[k])
+        for (k, v) in E: D[k] = self.dumps(v)
+    for k in F: D[k] = self.dumps(F[k])
     v = self.server.hmset(self.base_key, D)
 
   def keys(self):
     return self.server.hkeys(self.base_key)
 
   def values(self):
-    return [json.loads(v) for v in self.server.hvals(self.base_key)]
+    return [self.loads(v) for v in self.server.hvals(self.base_key)]
 
   def items(self):
-    return [(k,json.loads(v)) for k,v in self.server.hgetall(self.base_key).items()]
+    return [(k,self.loads(v)) for k,v in self.server.hgetall(self.base_key).items()]
 
   def __cmp__(self, d):
     return cmp(dict(self.items()), d)
