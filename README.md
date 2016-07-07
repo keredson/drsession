@@ -108,3 +108,13 @@ class SessionMiddleware(__builtin__.object)
 | `redis_server` and `redis_kwargs` | If `redis_server` is provided it is used directly.  Else created with `redis.Redis(**redis_kwargs)` |
 | `connection_pool` and `connection_pool_kwargs` | If `connection_pool` is provided it is used directly.  Else created with `redis.ConnectionPool(**connection_pool_kwargs)` if `connection_pool_kwargs` is defined.  To not use any connection pooling set `connection_pool_kwargs=None`.  To be "used" means to be added to `redis_kwargs`. |
 | `dumps` and `loads` | Serialization and deserialization functions.  Default to `json.dumps` and `json.loads`. |
+
+## Testing
+```bash
+$ python test_drsession.py 
+..................
+----------------------------------------------------------------------
+Ran 18 tests in 0.010s
+
+OK
+```
