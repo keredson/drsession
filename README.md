@@ -86,6 +86,10 @@ Your session id (plus a prefix) is your Redis key.  The keys in your session are
 
 By default DRSession serializes with the python `json` module.  If you wish for a different encoding, pass in new functions to the `loads` and `dumps` parameters of `SessionMiddleware`.
 
+### Keep it Simple
+
+This isn't rocket science.  One file (`drsession.py`) is required to use.  Very few lines of code.
+
 ## Documentation
 
 ```
