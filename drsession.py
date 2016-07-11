@@ -29,7 +29,7 @@ import Cookie
 
 
 __all__ = ['SessionMiddleware', '__version__']
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 
 class SessionMiddleware(object):
@@ -71,9 +71,13 @@ class SessionMiddleware(object):
     return Session(self.redis_server, '%s%s' % (self.prefix, session_id), loads=self.loads, dumps=self.dumps)
   
   def __call__(self, environ, start_response, exec_info=None):
-    cookie = Cookie.SimpleCookie()
-    cookie.load(environ['HTTP_COOKIE'])
-    session_cookie = cookie.get(self.cookie)
+    cookie_data = environ.get('HTTP_COOKIE')
+    if cookie_data is not None:
+      cookie = Cookie.SimpleCookie()
+      cookie.load(cookie_data)
+      session_cookie = cookie.get(self.cookie)
+    else:
+      session_cookie = None
     if session_cookie:
       session_id = cookie[self.cookie].value
       save_cookie = False

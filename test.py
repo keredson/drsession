@@ -33,8 +33,8 @@ class TestDRSession(unittest.TestCase):
     def fake_app(environ, start_response, exec_info=None):
       self.session = environ['drsession']
       self.session.destroy()
-    app = drsession.SessionMiddleware(fake_app, prefix='drsession-test:')
-    app({'HTTP_COOKIE': 'drsession=abc123;'}, None)
+    self.app = drsession.SessionMiddleware(fake_app, prefix='drsession-test:')
+    self.app({'HTTP_COOKIE': 'drsession=abc123;'}, None)
 
   def test_string(self):
     self.session['foo'] = 'bar'
@@ -126,6 +126,9 @@ class TestDRSession(unittest.TestCase):
   def test_items(self):
     self.session['foo'] = 'bar'
     self.assertEqual(self.session.items(), [('foo','bar')])
+
+  def test_no_cookie(self):
+    self.app({}, None)
 
 
 if __name__ == '__main__':
