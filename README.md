@@ -37,6 +37,11 @@ But it didn't quite fit our needs for the following reasons:
 
 Beaker's session middleware supposedly supports Redis (which would solve the first problem), but the rest remain.  So I wrote this bit of code.
 
+## Install
+```bash
+$ pip install git+https://github.com/keredson/drsession.git
+```
+
 ## Hello World
 
 ```python
