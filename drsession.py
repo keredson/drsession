@@ -23,6 +23,7 @@
 #
 
 
+import base64, datetime
 import redis
 import Cookie
 
@@ -42,13 +43,21 @@ class SessionMiddleware(object):
       connection_pool=None, 
       connection_pool_kwargs={},
       loads=None,
-      dumps=None):
+      dumps=None,
+      gen_session_id=None):
     self.app = app
     self.prefix = prefix
     self.cookie = cookie
     self.env = env
     self.loads = loads
     self.dumps = dumps
+    self.gen_session_id = gen_session_id
+    if self.gen_session_id is None:
+      import Crypto.Random
+      rng = Crypto.Random.new()
+      def gen_session_id():
+        return base64.urlsafe_b64encode(rng.read(32)).decode('utf-8').rstrip('=')
+      self.gen_session_id = gen_session_id
     if connection_pool is None:
       if connection_pool_kwargs is not None:
         connection_pool = redis.ConnectionPool(**connection_pool_kwargs)
@@ -61,9 +70,30 @@ class SessionMiddleware(object):
   def __call__(self, environ, start_response, exec_info=None):
     cookie = Cookie.SimpleCookie()
     cookie.load(environ['HTTP_COOKIE'])
-    session_id = cookie[self.cookie].value
+    session_cookie = cookie.get(self.cookie)
+    if session_cookie:
+      session_id = cookie[self.cookie].value
+      save_cookie = False
+    else:
+      session_id = self.gen_session_id()
+      save_cookie = True
     environ[self.env] = Session(self.redis_server, '%s%s' % (self.prefix, session_id), loads=self.loads, dumps=self.dumps)
-    return self.app(environ, start_response, exec_info=exec_info)
+    def session_start_response(status, headers, exec_info=None):
+      if save_cookie:
+        c = Cookie.SimpleCookie()
+        c[self.cookie] = session_id
+        c[self.cookie]['expires'] = (datetime.datetime.now() + datetime.timedelta(days=10*365)).strftime("%a, %d-%b-%Y %H:%M:%S PST")
+        header, value = c.output().split(' ', 1)
+        header = header.rstrip(':')
+        headers.append((header, value))
+      if exec_info is None:
+        return start_response(status, headers)
+      else:
+        return start_response(status, headers, exec_info)
+    if exec_info is None:
+      return self.app(environ, session_start_response)
+    else:
+      return self.app(environ, session_start_response, exec_info)
     
 
 class Session(object):
@@ -148,5 +178,9 @@ class Session(object):
 
   def __iter__(self):
     return iter(self.keys())
+
+  def save(self):
+    # nothing to be done - just for compat.
+    pass
 
 
