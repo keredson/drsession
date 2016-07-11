@@ -115,10 +115,39 @@ class SessionMiddleware(__builtin__.object)
 
 ## Testing
 ```bash
-$ python test_drsession.py 
+$ python test.py 
 ..................
 ----------------------------------------------------------------------
 Ran 18 tests in 0.010s
 
 OK
 ```
+
+## Performance
+```bash
+$ cat /proc/cpuinfo | grep "model name" | uniq
+model name	: Intel(R) Core(TM) i5-6260U CPU @ 1.80GHz
+
+$ python performance.py 
+
+--==[ DRSession ]==--
+
+Hitting a local Redis server.
+All data changes are live.
+
+TESTING: session['foo'] = 'bar' # set a value
+20000 loops took 0.862565040588 seconds (0.043ms per loop)
+
+TESTING: session['foo'] # read a value
+20000 loops took 0.903891086578 seconds (0.045ms per loop)
+
+TESTING: 'foo' in session # does a value exist?
+20000 loops took 0.729822874069 seconds (0.036ms per loop)
+
+TESTING: del session['foo'] # remove a value
+20000 loops took 0.743810892105 seconds (0.037ms per loop)
+
+TESTING: session.save() # doesn't do anything
+20000 loops took 0.00244402885437 seconds (0.000ms per loop)
+```
+

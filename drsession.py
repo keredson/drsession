@@ -67,6 +67,9 @@ class SessionMiddleware(object):
     else:
       self.redis_server = redis.Redis(**redis_kwargs)
   
+  def _build_session(self, session_id):
+    return Session(self.redis_server, '%s%s' % (self.prefix, session_id), loads=self.loads, dumps=self.dumps)
+  
   def __call__(self, environ, start_response, exec_info=None):
     cookie = Cookie.SimpleCookie()
     cookie.load(environ['HTTP_COOKIE'])
@@ -77,7 +80,7 @@ class SessionMiddleware(object):
     else:
       session_id = self.gen_session_id()
       save_cookie = True
-    environ[self.env] = Session(self.redis_server, '%s%s' % (self.prefix, session_id), loads=self.loads, dumps=self.dumps)
+    environ[self.env] = self._build_session(session_id)
     def session_start_response(status, headers, exec_info=None):
       if save_cookie:
         c = Cookie.SimpleCookie()
