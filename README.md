@@ -1,3 +1,8 @@
+<br>
+<p align='center'>
+  <img src='https://cloud.githubusercontent.com/assets/2049665/16746260/20813782-477f-11e6-8161-5d0f8ab37b40.png'>
+</p>
+
 # DRSession
 Derek's Redis Session Middleware
 
@@ -36,6 +41,11 @@ But it didn't quite fit our needs for the following reasons:
 4. WTF is up w/ the required lock file?!?
 
 Beaker's session middleware supposedly supports Redis (which would solve the first problem), but the rest remain.  So I wrote this bit of code.
+
+## Install
+```bash
+$ pip install git+https://github.com/keredson/drsession.git
+```
 
 ## Hello World
 
