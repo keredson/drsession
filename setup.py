@@ -11,6 +11,5 @@ setup(name='DRSession',
   author_email='public@kered.org',
   url='https://github.com/keredson/drsession',
   py_modules=['drsession'],
-  install_requires=['redis','Cookie'],
+  install_requires=['redis'],
 )
-
