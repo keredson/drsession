@@ -29,7 +29,7 @@ import Cookie
 
 
 __all__ = ['SessionMiddleware', '__version__']
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 
 class SessionMiddleware(object):
