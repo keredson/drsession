@@ -1,5 +1,4 @@
-import bottle
-import drsession
+import bottle, drsession
 
 app = drsession.SessionMiddleware(bottle.app())
 
@@ -10,11 +9,11 @@ def setup_session():
 @bottle.route('/set')
 def set():
   bottle.request.session['foo'] = 'bar'
+  return 'OK'
 
 @bottle.route('/get')
 def get():
   return bottle.request.session['foo']
-  return 'OK'
 
 bottle.run(app=app)
 

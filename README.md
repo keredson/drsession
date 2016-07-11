@@ -40,7 +40,7 @@ Beaker's session middleware supposedly supports Redis (which would solve the fir
 ## Hello World
 
 ```python
-import bottle
+import bottle, drsession
 
 app = drsession.SessionMiddleware(bottle.app())
 
@@ -51,14 +51,13 @@ def setup_session():
 @bottle.route('/set')
 def set():
   bottle.request.session['foo'] = 'bar'
+  return 'OK'
 
 @bottle.route('/get')
 def get():
   return bottle.request.session['foo']
-  return 'OK'
 
 bottle.run(app=app)
-
 ```
 
 This backs your session object with the Redis server instance running on `localhost` (using a connection pool) and sets `request.session` as the dictionary-like interface.
