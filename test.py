@@ -48,6 +48,10 @@ class TestDRSession(unittest.TestCase):
     self.session['foo'] = {'bar':'woot'}
     self.assertEqual(self.session['foo'], {'bar':'woot'})
 
+  def test_None(self):
+    self.session['foo'] = None
+    self.assertEqual(self.session['foo'], None)
+
   def test_keyerror(self):
     with self.assertRaises(KeyError):
       v = self.session['foo']
