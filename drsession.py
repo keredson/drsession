@@ -23,9 +23,13 @@
 #
 
 
-import base64, datetime
+import base64, datetime, os
 import redis
-import Cookie
+try:
+  import Cookie as cookies
+except ImportError:
+  import http.cookies as cookies
+
 
 
 __all__ = ['SessionMiddleware', '__version__']
@@ -53,10 +57,8 @@ class SessionMiddleware(object):
     self.dumps = dumps
     self.gen_session_id = gen_session_id
     if self.gen_session_id is None:
-      import Crypto.Random
-      rng = Crypto.Random.new()
       def gen_session_id():
-        return base64.urlsafe_b64encode(rng.read(32)).decode('utf-8').rstrip('=')
+        return base64.urlsafe_b64encode(os.urandom(32)).decode('utf-8').rstrip('=')
       self.gen_session_id = gen_session_id
     if connection_pool is None:
       if connection_pool_kwargs is not None:
@@ -73,7 +75,7 @@ class SessionMiddleware(object):
   def __call__(self, environ, start_response, exec_info=None):
     cookie_data = environ.get('HTTP_COOKIE')
     if cookie_data is not None:
-      cookie = Cookie.SimpleCookie()
+      cookie = cookies.SimpleCookie()
       cookie.load(cookie_data)
       session_cookie = cookie.get(self.cookie)
     else:
@@ -87,7 +89,7 @@ class SessionMiddleware(object):
     environ[self.env] = self._build_session(session_id)
     def session_start_response(status, headers, exec_info=None):
       if save_cookie:
-        c = Cookie.SimpleCookie()
+        c = cookies.SimpleCookie()
         c[self.cookie] = session_id
         c[self.cookie]['expires'] = (datetime.datetime.now() + datetime.timedelta(days=10*365)).strftime("%a, %d-%b-%Y %H:%M:%S PST")
         header, value = c.output().split(' ', 1)
@@ -116,12 +118,12 @@ class Session(object):
       self.dumps = json.dumps
 
   def __setitem__(self, key, item):
-    return self.server.hset(self.base_key, key, self.dumps(item))
+    return self.server.hset(self.base_key, key, self.dumps(item).encode("utf-8"))
 
   def __getitem__(self, key):
     v = self.server.hget(self.base_key, key)
     if v is None: raise KeyError(key)
-    return self.loads(v)
+    return self.loads(v.decode("utf-8"))
 
   def __repr__(self):
     return '%s<key=%s>' % (self.__class__.__name__, repr(self.base_key))
@@ -148,7 +150,7 @@ class Session(object):
     v = self.server.hget(self.base_key, key)
     if v is None: return d
     try:
-      return self.loads(v)
+      return self.loads(v.decode("utf-8"))
     except ValueError:
       return d
 
@@ -162,20 +164,20 @@ class Session(object):
     if args and len(args)>0:
       E = args[0]
       if hasattr(E,'keys'):
-        for k in E: D[k] = self.dumps(E[k])
+        for k in E: D[k] = self.dumps(E[k]).encode("utf-8")
       else:
-        for (k, v) in E: D[k] = self.dumps(v)
-    for k in F: D[k] = self.dumps(F[k])
+        for (k, v) in E: D[k] = self.dumps(v).encode("utf-8")
+    for k in F: D[k] = self.dumps(F[k]).encode("utf-8")
     v = self.server.hmset(self.base_key, D)
 
   def keys(self):
-    return self.server.hkeys(self.base_key)
+    return [k.decode("utf-8") for k in self.server.hkeys(self.base_key)]
 
   def values(self):
-    return [self.loads(v) for v in self.server.hvals(self.base_key)]
+    return [self.loads(v.decode("utf-8")) for v in self.server.hvals(self.base_key)]
 
   def items(self):
-    return [(k,self.loads(v)) for k,v in self.server.hgetall(self.base_key).items()]
+    return [(k.decode("utf-8"),self.loads(v.decode("utf-8"))) for k,v in self.server.hgetall(self.base_key).items()]
 
   def __cmp__(self, d):
     return cmp(dict(self.items()), d)
