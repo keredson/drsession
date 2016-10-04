@@ -64,6 +64,8 @@ class SessionMiddleware(object):
       if connection_pool_kwargs is not None:
         connection_pool = redis.ConnectionPool(**connection_pool_kwargs)
         redis_kwargs['connection_pool'] = connection_pool
+    else:
+      redis_kwargs['connection_pool'] = connection_pool
     if redis_server:
       self.redis_server = redis_server
     else:
