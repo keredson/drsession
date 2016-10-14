@@ -24,7 +24,6 @@
 
 
 import base64, datetime, os
-import redis
 try:
   import Cookie as cookies
 except ImportError:
@@ -33,7 +32,7 @@ except ImportError:
 
 
 __all__ = ['SessionMiddleware', '__version__']
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 
 class SessionMiddleware(object):
@@ -49,6 +48,7 @@ class SessionMiddleware(object):
       loads=None,
       dumps=None,
       gen_session_id=None):
+    import redis
     self.app = app
     self.prefix = prefix
     self.cookie = cookie
