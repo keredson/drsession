@@ -44,7 +44,7 @@ Beaker's session middleware supposedly supports Redis (which would solve the fir
 
 ## Install
 ```bash
-$ pip install git+https://github.com/keredson/drsession.git
+$ sudo pip install drsession
 ```
 
 ## Hello World
