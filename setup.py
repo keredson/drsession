@@ -4,7 +4,7 @@ from setuptools import setup
 
 from drsession import __version__
 
-setup(name='DRSession',
+setup(name='drsession',
   version=__version__,
   description="Derek's Redis Session Middleware",
   author='Derek Anderson',
