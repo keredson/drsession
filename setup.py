@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-from drsession import __version__
+execfile('version.py')
 
 setup(name='DRSession',
   version=__version__,
