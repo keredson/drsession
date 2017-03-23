@@ -94,6 +94,8 @@ class SessionMiddleware(object):
         c = cookies.SimpleCookie()
         c[self.cookie] = session_id
         c[self.cookie]['expires'] = (datetime.datetime.now() + datetime.timedelta(days=10*365)).strftime("%a, %d-%b-%Y %H:%M:%S PST")
+        c[self.cookie]['path'] = '/'
+        c[self.cookie]['httponly'] = True
         header, value = c.output().split(' ', 1)
         header = header.rstrip(':')
         headers.append((header, value))
