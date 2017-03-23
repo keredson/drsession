@@ -32,7 +32,7 @@ except ImportError:
 
 
 __all__ = ['SessionMiddleware', '__version__']
-__version__ = '1.1.5'
+__version__ = '1.1.6'
 
 
 class SessionMiddleware(object):
