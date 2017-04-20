@@ -10,6 +10,9 @@ Derek's Redis Session Middleware
 I started a bottle project with the beaker session example everyone seems to give:
 
 ```python
+
+# EXAMPLE OF BEAKER'S MIDDLEWARE - DO NOT USE!!!
+
 import bottle
 from beaker.middleware import SessionMiddleware
 
@@ -40,7 +43,7 @@ But it didn't quite fit our needs for the following reasons:
 3. If I'm unable to set a session value, I want an exception, not a silent failure.
 4. WTF is up w/ the required lock file?!?
 
-Beaker's session middleware supposedly supports Redis (which would solve the first problem), but the rest remain.  So I wrote this bit of code.
+Beaker's session middleware supposedly supports Redis (which in theory would solve the first problem, but we couldn't get it to work), but the rest remain.  So I wrote this bit of code.
 
 ## Install
 ```bash
@@ -90,6 +93,10 @@ Definitely don't write every value in my entire session every time I read anythi
 ### Take Advantage of Redis' Hash Type
 
 Your session id (plus a prefix) is your Redis key.  The keys in your session are keys to the Redis hash type set at your Redis key.  The hash values are `json` encoded strings of the objects in your session.
+
+### Use `HINCRBY` for `+=` Operations
+
+For fast, race-free counters.
 
 ### Support All the Types
 
