@@ -36,6 +36,11 @@ class TestDRSession(unittest.TestCase):
     self.app = drsession.SessionMiddleware(fake_app, prefix='drsession-test:')
     self.app({'HTTP_COOKIE': 'drsession=abc123;'}, None)
 
+  def test_int(self):
+    self.session['foo'] = 1
+    self.assertEqual(self.session['foo'], 1)
+    self.assertTrue(isinstance(self.session['foo'], int))
+
   def test_string(self):
     self.session['foo'] = 'bar'
     self.assertEqual(self.session['foo'], 'bar')
@@ -129,6 +134,17 @@ class TestDRSession(unittest.TestCase):
 
   def test_no_cookie(self):
     self.app({}, None)
+
+  def test_int_incrby(self):
+    self.session['foo'] = 1
+    self.session['foo'] += 1
+    self.assertEqual(self.session['foo'], 2)
+    self.session['foo'] += 2
+    self.assertEqual(self.session['foo'], 4)
+    self.session['foo'] += -1
+    self.assertEqual(self.session['foo'], 3)
+    self.session['foo'] -= 1
+    self.assertEqual(self.session['foo'], 2)
 
 
 if __name__ == '__main__':

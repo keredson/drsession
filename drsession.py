@@ -32,7 +32,7 @@ except ImportError:
 
 
 __all__ = ['SessionMiddleware', '__version__']
-__version__ = '1.1.6'
+__version__ = '1.2.0'
 
 
 class SessionMiddleware(object):
@@ -107,6 +107,21 @@ class SessionMiddleware(object):
       return self.app(environ, session_start_response)
     else:
       return self.app(environ, session_start_response, exec_info)
+
+
+class _IaddInt(int):
+
+  def __new__(cls, x, incrby=0):
+    ret = super(_IaddInt, cls).__new__(cls, x)
+    ret._incrby = incrby
+    return ret
+    
+  def __iadd__(self, x):
+    y = self + x
+    return _IaddInt(y, incrby=self._incrby+x)
+    
+  def __isub__(self, x):
+    return self.__iadd__(-x)
     
 
 class Session(object):
@@ -122,12 +137,17 @@ class Session(object):
       self.dumps = json.dumps
 
   def __setitem__(self, key, item):
-    return self.server.hset(self.base_key, key, self.dumps(item).encode("utf-8"))
+    if isinstance(item, _IaddInt):
+      return self.server.hincrby(self.base_key, key, self.dumps(item._incrby).encode("utf-8"))
+    else:
+      return self.server.hset(self.base_key, key, self.dumps(item).encode("utf-8"))
 
   def __getitem__(self, key):
     v = self.server.hget(self.base_key, key)
     if v is None: raise KeyError(key)
-    return self.loads(v.decode("utf-8"))
+    v = self.loads(v.decode("utf-8"))
+    if isinstance(v,int): v = _IaddInt(v)
+    return v
 
   def __repr__(self):
     return '%s<key=%s>' % (self.__class__.__name__, repr(self.base_key))
